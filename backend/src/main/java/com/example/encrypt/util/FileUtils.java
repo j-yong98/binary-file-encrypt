@@ -4,17 +4,26 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 
 public class FileUtils {
 
-    @Value("${file.save.path}")
-    private static String savePath;
+    private static final char DELIMITER = '.';
+    private static final String savePath = "file";
 
     public static void write(byte[] bytes, String saveFilename) {
+        Path path = Paths.get(savePath, saveFilename);
         try {
-            Path path = Path.of(savePath, saveFilename);
+            if (!Files.exists(path.getParent())) {
+                Files.createDirectories(path.getParent());
+            }
+
+            if (!Files.exists(path)) {
+                Files.createFile(path);
+            }
+
             Files.write(path, bytes);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -25,7 +34,8 @@ public class FileUtils {
         return new File(savePath + saveFilename);
     }
 
-    public static String getSaveFilename() {
-        return UUID.randomUUID().toString();
+    public static String getSaveFilename(String filename) {
+        return UUID.randomUUID() + filename.substring(filename.lastIndexOf(DELIMITER));
     }
+
 }

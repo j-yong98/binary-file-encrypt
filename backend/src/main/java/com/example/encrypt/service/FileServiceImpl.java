@@ -6,6 +6,7 @@ import com.example.encrypt.mapper.FileMapper;
 import com.example.encrypt.repository.FileRepository;
 import com.example.encrypt.util.FileUtils;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
@@ -22,8 +23,12 @@ public class FileServiceImpl implements FileService{
 
     @Override
     public void upload(MultipartFile file) {
+        if (file == null) {
+            throw new IllegalArgumentException("Empty file");
+        }
+
         String originalFilename = file.getOriginalFilename();
-        String saveFilename = FileUtils.getSaveFilename();
+        String saveFilename = FileUtils.getSaveFilename(originalFilename);
         String ivValue = makeIvValue();
 
         try {
