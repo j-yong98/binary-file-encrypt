@@ -31,6 +31,9 @@ public class FileInformation {
     private String saveFilename;
 
     @Column
+    private String encryptFilename;
+
+    @Column
     private String ivValue;
 
     @CreationTimestamp

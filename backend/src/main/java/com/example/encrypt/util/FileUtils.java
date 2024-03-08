@@ -34,8 +34,11 @@ public class FileUtils {
         return new File(savePath + saveFilename);
     }
 
-    public static String getSaveFilename(String filename) {
-        return UUID.randomUUID() + filename.substring(filename.lastIndexOf(DELIMITER));
+    public static String getSaveFilename(String ext) {
+        return UUID.randomUUID() + ext;
     }
 
+    public static String getExt(String filename) {
+        return filename.substring(filename.lastIndexOf(DELIMITER));
+    }
 }

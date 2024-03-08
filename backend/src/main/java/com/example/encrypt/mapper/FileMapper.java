@@ -8,10 +8,11 @@ import org.springframework.core.io.Resource;
 
 public class FileMapper {
 
-    public static FileInformation toEntity(String originalFilename, String saveFilename, String ivValue) {
+    public static FileInformation toEntity(String originalFilename, String saveFilename, String encryptFilename, String ivValue) {
         return FileInformation.builder()
                 .originalFilename(originalFilename)
                 .saveFilename(saveFilename)
+                .encryptFilename(encryptFilename)
                 .ivValue(ivValue)
                 .build();
     }
@@ -24,8 +25,6 @@ public class FileMapper {
         return FileLoadResponse.builder()
                 .originFilename(fileInformation.getOriginalFilename())
                 .saveFilename(fileInformation.getSaveFilename())
-                .ivValue(fileInformation.getIvValue())
-                .uploadTime(fileInformation.getUploadTime())
                 .build();
     }
 
@@ -33,8 +32,6 @@ public class FileMapper {
         return FileLoadResponse.builder()
                 .originFilename(fileInformation.getOriginalFilename())
                 .saveFilename(fileInformation.getSaveFilename())
-                .ivValue(fileInformation.getIvValue())
-                .uploadTime(fileInformation.getUploadTime())
                 .resource(resource)
                 .build();
     }

@@ -27,17 +27,18 @@ public class FileController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<Void> upload(@RequestPart(value = "file") MultipartFile file) {
+    public ResponseEntity<Void> upload(@RequestPart(value = "file") MultipartFile file) throws Exception {
         log.info("request upload : {}", file);
         fileService.upload(file);
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/download/{filename}")
-    public ResponseEntity<Resource> download(@PathVariable String filename) {
-        FileLoadResponse download = fileService.download(filename);
+    @GetMapping("/download/{saveFilename}/{filename}")
+    public ResponseEntity<Resource> download(@PathVariable String saveFilename, @PathVariable String filename)
+            throws Exception {
+        FileLoadResponse download = fileService.download(saveFilename, filename);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + download.getOriginFilename())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=\"" + filename + "\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(download.getResource());
     }
