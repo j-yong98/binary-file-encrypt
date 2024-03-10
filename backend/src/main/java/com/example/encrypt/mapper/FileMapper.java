@@ -1,38 +1,32 @@
 package com.example.encrypt.mapper;
 
 import com.example.encrypt.domain.FileInformation;
-import com.example.encrypt.dto.FileLoadResponse;
-import java.util.List;
-import java.util.stream.Collectors;
-import org.springframework.core.io.Resource;
+import com.example.encrypt.dto.FileResponse;
+import com.example.encrypt.dto.FileUploadResponse;
+import org.springframework.http.HttpStatus;
 
 public class FileMapper {
 
-    public static FileInformation toEntity(String originalFilename, String saveFilename, String encryptFilename, String ivValue) {
+    public static FileInformation toEntity(String originalFilename, String saveFilename) {
         return FileInformation.builder()
                 .originalFilename(originalFilename)
                 .saveFilename(saveFilename)
-                .encryptFilename(encryptFilename)
-                .ivValue(ivValue)
                 .build();
     }
 
-    public static List<FileLoadResponse> entitiesToFileLoad(List<FileInformation> files) {
-        return files.stream().map(FileMapper::entityToFileLoad).collect(Collectors.toList());
+    public static FileUploadResponse toFileUploadResponse(HttpStatus status, String saveFilename) {
+        return FileUploadResponse.builder()
+                .status(status)
+                .saveFilename(saveFilename)
+                .build();
     }
 
-    public static FileLoadResponse entityToFileLoad(FileInformation fileInformation) {
-        return FileLoadResponse.builder()
-                .originFilename(fileInformation.getOriginalFilename())
+
+    public static FileResponse entityToFileLoad(FileInformation fileInformation) {
+        return FileResponse.builder()
+                .originalFilename(fileInformation.getOriginalFilename())
                 .saveFilename(fileInformation.getSaveFilename())
                 .build();
     }
 
-    public static FileLoadResponse entityToFileLoad(FileInformation fileInformation, Resource resource) {
-        return FileLoadResponse.builder()
-                .originFilename(fileInformation.getOriginalFilename())
-                .saveFilename(fileInformation.getSaveFilename())
-                .resource(resource)
-                .build();
-    }
 }

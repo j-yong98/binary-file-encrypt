@@ -20,3 +20,8 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+ftp:
+  host: 127.0.0.1
+  port: 21
+  username: admin
+  password: 1234
