@@ -12,7 +12,6 @@ const FileInfoView = ({selectFile, progress, setProgress}: {
     const [data, setData] = useState([]);
     const [totalPages, setTotalPages] = useState<number>(0);
     const [currentPage, setCurrentPage] = useState<number>(0);
-    const [isDone, setIsDone] = useState<boolean>(true);
     const [showModal, setShowModal] = useState<boolean>(false);
     const th = ['No.', '암호화 대상 파일', '암호화 된 파일', 'IV 값', '일시']
 
@@ -32,46 +31,31 @@ const FileInfoView = ({selectFile, progress, setProgress}: {
     };
 
     const fileDownload = async (saveFilename: string, originalFilename: string) => {
-        setIsDone(false);
         setShowModal(true);
         const chunkSize = 1024 * 1024;
         let start = 0;
         let end = chunkSize - 1;
-        let chunks: BlobPart[] = [];
+        try {
+            await downloadFile(saveFilename, originalFilename, start, end, setProgress).then((response) => {
+                const blob = new Blob([response.data])
+                const fileURL = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = fileURL;
+                a.download = originalFilename;
+                document.body.appendChild(a);
 
-        while (!isDone) {
-            try {
-                await downloadFile(saveFilename, originalFilename, start, end).then((response) => {
-                    console.log(response);
-                    const status = response.status;
-                    if (status === 200) {
-                        const data = new Blob(chunks);
-                        const fileURL = URL.createObjectURL(data);
-                        setIsDone(true);
+                a.click();
 
-                        const a = document.createElement('a');
-                        a.href = fileURL;
-                        a.download = originalFilename;
-                        document.body.appendChild(a);
-
-                        a.click();
-
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(fileURL);
-                    } else if (status === 206) {
-                        chunks.push(response.data);
-                        start = end + 1;
-                        end = start + chunkSize - 1;
-                    }
-                });
-            } catch (error) {
-                console.error(error);
-                break;
-            }
+                document.body.removeChild(a);
+                URL.revokeObjectURL(fileURL);
+            })
+        } catch (error) {
+            console.error(error);
         }
     }
 
     const closeModal = () => {
+        setProgress(0);
         setShowModal(false);
     }
 
@@ -142,7 +126,9 @@ const FileInfoView = ({selectFile, progress, setProgress}: {
                     ))}
                 </Pagination>
             </div>
-            <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+            <Modal
+                backdrop='static'
+                show={showModal} onHide={() => setShowModal(false)} centered>
                 <Modal.Header>
                     <Modal.Title>파일 다운로드 진행 상태</Modal.Title>
                 </Modal.Header>
@@ -152,7 +138,7 @@ const FileInfoView = ({selectFile, progress, setProgress}: {
                     }
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button onClick={closeModal}>닫기</Button>
+                    <Button onClick={() => closeModal()}>닫기</Button>
                 </Modal.Footer>
             </Modal>
         </div>

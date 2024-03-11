@@ -1,20 +1,16 @@
 package com.example.encrypt.controller;
 
-import com.example.encrypt.dto.FileDownloadResponse;
 import com.example.encrypt.dto.FileLoadResponse;
 import com.example.encrypt.dto.FileUploadResponse;
 import com.example.encrypt.service.FileService;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.FileInputStream;
+import java.io.OutputStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.ResourceRegion;
 import org.springframework.data.domain.Page;
-import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,17 +52,8 @@ public class FileController {
     }
 
     @GetMapping("/download/{saveFilename}/{filename}")
-    public ResponseEntity<ResourceRegion> download(@PathVariable String saveFilename, @PathVariable String filename,
-                                                   @RequestHeader HttpHeaders headers)
+    public void download(@PathVariable String saveFilename, @PathVariable String filename, HttpServletResponse response)
             throws Exception {
-        log.info("request download: {} {}", saveFilename, filename);
-        Optional<FileDownloadResponse> download = fileService.download(saveFilename, filename, headers);
-
-        return download.map(data -> ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
-                .cacheControl(CacheControl.maxAge(10, TimeUnit.MINUTES))
-                .contentType(data.getMediaType())
-                .header(HttpHeaders.ACCEPT_RANGES, "bytes")
-                .eTag(data.getPath())
-                .body(data.getRegion())).orElseGet(() -> ResponseEntity.ok().build());
+        fileService.download(saveFilename, filename, response);
     }
 }

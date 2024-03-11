@@ -10,8 +10,13 @@ import com.example.encrypt.mapper.FileMapper;
 import com.example.encrypt.repository.EncryptRepository;
 import com.example.encrypt.repository.FileRepository;
 import com.example.encrypt.util.FileUtils;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
@@ -68,8 +73,8 @@ public class FileServiceImpl implements FileService {
         String encryptSaveFilename = FileUtils.getSaveFilename(ext);
         byte[] encrypt = encryptor.encrypt(from, ivValue);
 
-        FileUtils.write(from, saveFilename);
-        FileUtils.write(encrypt, encryptSaveFilename);
+        FileUtils.write(from, saveFilename, StandardOpenOption.WRITE);
+        FileUtils.write(encrypt, encryptSaveFilename, StandardOpenOption.WRITE);
 
         FileInformation originalFile = FileMapper.toEntity(originalFilename, saveFilename);
         FileInformation encryptFile = FileMapper.toEntity(encryptFilename, encryptSaveFilename);
@@ -80,14 +85,14 @@ public class FileServiceImpl implements FileService {
 
     private void saveChunkFile(MultipartFile file, String filename, int index) throws IOException {
         String chunkFile = filename + SUFFIX + index;
-        FileUtils.write(file.getBytes(), chunkFile);
+        FileUtils.write(file.getBytes(), chunkFile, StandardOpenOption.WRITE);
     }
 
     private void merge(String saveFilename, int total) {
         for (int i = 1; i <= total; i++) {
             String filename = saveFilename + SUFFIX + i;
             byte[] from = FileUtils.from(filename);
-            FileUtils.write(from, saveFilename);
+            FileUtils.write(from, saveFilename, StandardOpenOption.APPEND);
             FileUtils.delete(filename);
         }
     }
@@ -100,33 +105,17 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public Optional<FileDownloadResponse> download(String saveFilename, String filename, HttpHeaders headers)
+    public void download(String saveFilename, String filename, HttpServletResponse response)
             throws Exception {
-        Path path = FileUtils.getPath(saveFilename);
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment=;filename" + filename);
+        response.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(FileUtils.getContentLength(saveFilename)));
+        InputStream inputStream = FileUtils.getInputStream(saveFilename);
+        OutputStream out = response.getOutputStream();
 
-        FileSystemResource data = new FileSystemResource(path);
-
-        long chunkSize = 1024 * 1024;
-        long dataLength = data.contentLength();
-
-        HttpRange httpRange = headers.getRange().stream().findFirst()
-                .orElse(HttpRange.createByteRange(0, dataLength - 1));
-        log.info(httpRange.toString());
-
-        long start = httpRange.getRangeStart(dataLength);
-        long end = httpRange.getRangeEnd(dataLength);
-        long rangeLength = Long.min(chunkSize, end - start);
-        if (start > rangeLength) {
-            return Optional.empty();
+        byte[] bytes = new byte[1024 * 1024];
+        while (inputStream.read(bytes) != -1) {
+            out.write(bytes);
         }
-
-        MediaType mediaType = MediaTypeFactory.getMediaType(data).orElse(MediaType.APPLICATION_OCTET_STREAM);
-        ResourceRegion region = new ResourceRegion(data, httpRange.getRangeStart(dataLength), rangeLength);
-        return Optional.of(FileDownloadResponse.builder()
-                .mediaType(mediaType)
-                .path(String.valueOf(path))
-                .region(region)
-                .build());
     }
 
     private String makeIvValue() {

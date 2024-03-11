@@ -8,7 +8,8 @@ import org.springframework.http.MediaType;
 @Builder
 @Getter
 public class FileDownloadResponse {
-    MediaType mediaType;
-    String path;
-    ResourceRegion region;
+    private MediaType mediaType;
+    private String path;
+    private String totalLength;
+    private ResourceRegion region;
 }

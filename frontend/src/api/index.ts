@@ -1,4 +1,5 @@
 import axios from "axios";
+import React from "react";
 
 
 const client = axios.create({
@@ -6,9 +7,12 @@ const client = axios.create({
 });
 
 
-export async function sendFile(formdata: FormData, headers: {'SaveFilename': string, 'ChunkIndex': number, 'ChunkTotal': number}) {
+export async function sendFile(
+    formdata: FormData,
+    headers: { 'SaveFilename': string, 'ChunkIndex': number, 'ChunkTotal': number }
+) {
     return await client.post('/api/file/upload', formdata, {
-        onUploadProgress: function(progressEvent: any) {
+        onUploadProgress: function (progressEvent: any) {
             let percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
         },
         headers: headers
@@ -25,11 +29,17 @@ export async function loadFiles(page: number) {
     });
 }
 
-export async function downloadFile(saveFilename: string, filename: string, start: number, end: number) {
+export async function downloadFile(saveFilename: string, filename: string, start: number, end: number,
+                                   setProgress: React.Dispatch<React.SetStateAction<number | undefined>>
+                                   ) {
     return await client.get(`/api/file/download/${saveFilename}/${filename}`, {
         responseType: 'arraybuffer',
-        headers: {
-            Range: `bytes=${start}-${end}`,
+        onDownloadProgress: (event) => {
+            console.log(event)
+            if (event.total != undefined) {
+                const per = Math.round((event.loaded * 100) / event.total);
+                setProgress(per)
+            }
         }
     });
 

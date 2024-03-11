@@ -13,6 +13,7 @@ const FileInput = ({selectFile, setSelectedFile, progress, setProgress}: {
     const inputFile = useRef<HTMLInputElement>(null);
     const closeModal = () => {
         setShowModal(false);
+        setProgress(0);
     }
     const submit = () => {
         if (!selectFile) {
@@ -100,7 +101,9 @@ const FileInput = ({selectFile, setSelectedFile, progress, setProgress}: {
             >
                 제출하기
             </Button>
-            <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+            <Modal
+                backdrop='static'
+                show={showModal} onHide={() => setShowModal(false)} centered>
                 <Modal.Header>
                     <Modal.Title>파일 업로드 진행 상태</Modal.Title>
                 </Modal.Header>
@@ -110,7 +113,7 @@ const FileInput = ({selectFile, setSelectedFile, progress, setProgress}: {
                     }
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button onClick={() => setShowModal(!showModal)}>닫기</Button>
+                    <Button onClick={() => closeModal()}>닫기</Button>
                 </Modal.Footer>
             </Modal>
         </div>
